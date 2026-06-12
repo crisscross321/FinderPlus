@@ -76,64 +76,130 @@ SERVICES = [
 def make_workflow(service, wf_dir):
     """为一个服务生成完整的 .workflow 包。"""
     contents = os.path.join(wf_dir, "Contents")
-    os.makedirs(contents, exist_ok=True)
+    resources = os.path.join(contents, "Resources")
+    os.makedirs(resources, exist_ok=True)
 
     # ── Info.plist ──
     info = {
+        "CFBundleDevelopmentRegion": "en_US",
         "CFBundleIdentifier": service["bundle_id"],
         "CFBundleName": service["name"],
-        "CFBundleVersion": "1.0",
+        "CFBundleShortVersionString": "1.0",
         "NSServices": [
             {
                 "NSMenuItem": {"default": service["name"]},
                 "NSMessage": "runWorkflowAsService",
-                "NSRequiredContext": {},
-                "NSSendFileTypes": ["public.item"],
+                "NSSendFileTypes": ["public.folder"],
             }
         ],
     }
     with open(os.path.join(contents, "Info.plist"), "wb") as f:
         plistlib.dump(info, f)
 
-    # ── document.wflow ──
+    # ── document.wflow（位于 Contents/Resources/）──
+    action_uuid = str(uuid.uuid4()).upper()
+    input_uuid = str(uuid.uuid4()).upper()
+    output_uuid = str(uuid.uuid4()).upper()
+
     document = {
-        "AMApplicationBuild": "600",
-        "AMApplicationVersion": "2.11",
+        "AMApplicationBuild": "346",
+        "AMApplicationVersion": "2.3",
         "AMDocumentVersion": "2",
         "actions": [
             {
                 "action": {
-                    "AMAccepts": {
-                        "Container": "List",
-                        "Optional": True,
-                        "Types": ["com.apple.cocoa.string"],
-                    },
-                    "AMActionVersion": "2.0.4",
-                    "AMApplication": ["Automator"],
-                    "AMParameterIconName": "AutomatorShellScript",
-                    "actionBundle": "N/A",
-                    "actionName": "AMShellScriptAction",
-                    "actionUUID": str(uuid.uuid4()).upper(),
-                    "parameters": {
+                    "ActionBundlePath": "/System/Library/Automator/Run Shell Script.action",
+                    "ActionName": "Run Shell Script",
+                    "ActionParameters": {
+                        "CheckedForUserDefaultShell": True,
                         "COMMAND_STRING": service["script"],
-                        "CheckedForUID": True,
-                        "inputMethod": 1,       # 以命令行参数方式传入选中文件路径
+                        "inputMethod": 1,
                         "shell": "/bin/zsh",
                         "source": "",
                     },
+                    "AMAccepts": {
+                        "Container": "List",
+                        "Optional": True,
+                        "Types": ["com.apple.cocoa.path"],
+                    },
+                    "AMActionVersion": "2.0.3",
+                    "AMApplication": ["Automator"],
+                    "AMParameterProperties": {
+                        "CheckedForUserDefaultShell": {},
+                        "COMMAND_STRING": {},
+                        "inputMethod": {},
+                        "shell": {},
+                        "source": {},
+                    },
+                    "AMProvides": {
+                        "Container": "List",
+                        "Types": ["com.apple.cocoa.path"],
+                    },
+                    "arguments": {
+                        "0": {
+                            "default value": 0,
+                            "name": "inputMethod",
+                            "required": "0",
+                            "type": "0",
+                            "uuid": "0",
+                        },
+                        "1": {
+                            "default value": "",
+                            "name": "source",
+                            "required": "0",
+                            "type": "0",
+                            "uuid": "1",
+                        },
+                        "2": {
+                            "default value": 0,
+                            "name": "CheckedForUserDefaultShell",
+                            "required": "0",
+                            "type": "0",
+                            "uuid": "2",
+                        },
+                        "3": {
+                            "default value": "",
+                            "name": "COMMAND_STRING",
+                            "required": "0",
+                            "type": "0",
+                            "uuid": "3",
+                        },
+                        "4": {
+                            "default value": "/bin/zsh",
+                            "name": "shell",
+                            "required": "0",
+                            "type": "0",
+                            "uuid": "4",
+                        },
+                    },
+                    "BundleIdentifier": "com.apple.RunShellScript",
+                    "CanShowSelectedItemsWhenRun": True,
+                    "CanShowWhenRun": True,
+                    "Category": ["AMCategoryUtilities"],
+                    "CFBundleVersion": "2.0.3",
+                    "Class Name": "RunShellScriptAction",
+                    "InputUUID": input_uuid,
+                    "Keywords": ["Shell", "Script", "Files"],
+                    "location": "309.500000:631.000000",
+                    "nibPath": "/System/Library/Automator/Run Shell Script.action/Contents/Resources/en.lproj/main.nib",
+                    "OutputUUID": output_uuid,
+                    "UnlocalizedApplications": ["Automator"],
+                    "UUID": action_uuid,
                 },
-                "isViewable": True,
+                "isViewVisible": True,
             }
         ],
         "connectors": {},
         "workflowMetaData": {
-            "serviceInputTypeIdentifier": "public.item",
-            "serviceOutputTypeIdentifier": "com.apple.cocoa.string",
-            "serviceProcessesInput": 1,
-            "serviceSelectedTypeIdentifier": "public.item",
+            "serviceApplicationBundleID": "com.apple.finder",
+            "serviceApplicationPath": "/System/Library/CoreServices/Finder.app",
+            "serviceInputTypeIdentifier": "com.apple.Automator.fileSystemObject",
+            "serviceOutputTypeIdentifier": "com.apple.Automator.nothing",
+            "serviceProcessesInput": 0,
+            "workflowTypeIdentifier": "com.apple.Automator.servicesMenu",
         },
     }
-    with open(os.path.join(contents, "document.wflow"), "wb") as f:
+    with open(os.path.join(resources, "document.wflow"), "wb") as f:
         plistlib.dump(document, f)
 
 
